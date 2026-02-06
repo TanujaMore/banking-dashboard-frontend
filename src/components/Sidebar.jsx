@@ -7,6 +7,8 @@ import {
   PieChart,
   Settings,
   HelpCircle,
+  Receipt,   
+  Gift 
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -17,7 +19,8 @@ export default function Sidebar() {
     "bg-blue-100 text-blue-700 font-semibold";
 
   return (
-    <div className="w-64 h-screen bg-white border-r p-4 flex flex-col gap-2">
+    <div className="w-64 h-screen bg-white border-r p-4 flex flex-col gap-2 overflow-y-auto">
+  
 
       <h2 className="text-2xl font-bold text-blue-600 mb-6">
         Digital Bank
@@ -74,6 +77,28 @@ export default function Sidebar() {
         <PieChart size={20} />
         Budgets
       </NavLink>
+      
+      <NavLink 
+        to="/bills"
+        className={({ isActive }) =>
+         `${linkClass} ${isActive ? activeClass : ""}`
+         }
+      >
+        <Receipt size={20} />
+        Bills
+      </NavLink>
+
+      
+    <NavLink
+      to="/rewards"
+      className={({ isActive }) =>
+        `${linkClass} ${isActive ? activeClass : ""}`
+        }
+    >
+      <Gift size={20} />
+      Rewards
+    </NavLink>
+
 
       <NavLink
         to="/settings"
@@ -81,6 +106,8 @@ export default function Sidebar() {
           `${linkClass} ${isActive ? activeClass : ""}`
         }
       >
+
+
         <Settings size={20} />
         Settings
       </NavLink>

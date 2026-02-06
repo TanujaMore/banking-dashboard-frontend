@@ -13,6 +13,9 @@ import HelpCenter from "./pages/HelpCenter";
 import NotFound from "./pages/NotFound";
 import Categories from "./pages/Categories";
 import Budgets from "./pages/Budgets";
+import Bills from "./pages/Bills";
+import Rewards from "./pages/Rewards";
+
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,9 @@ export default function App() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/budgets" element={<Budgets />} />
+            <Route path="/bills" element={<Bills />} />
+            <Route path="/rewards" element={<Rewards />} />
+
 
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<HelpCenter />} />

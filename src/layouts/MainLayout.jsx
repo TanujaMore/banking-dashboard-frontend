@@ -46,7 +46,12 @@ export default function MainLayout({
           <MenuLink to="/categories" icon="🏷️" label="Categories" />
           <MenuLink to="/budgets" icon="📈" label="Budgets" />
 
+
+          <MenuLink to="/bills" icon="🧾" label="Bills" />
+          <MenuLink to="/rewards" icon="🎁" label="Rewards" />
+
           <hr className="my-4 border-white/10" />
+
 
           <MenuLink to="/settings" icon="⚙️" label="Settings" />
           <MenuLink to="/help" icon="❓" label="Help Center" />

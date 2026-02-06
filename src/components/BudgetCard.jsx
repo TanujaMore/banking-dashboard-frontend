@@ -1,4 +1,4 @@
-import API from "../utils/api";
+import React from "react";
 
 export default function BudgetCard({
   id,
@@ -7,46 +7,56 @@ export default function BudgetCard({
   limit_amount,
   warning,
   onDelete,
+  onEdit
 }) {
   const percent = Math.min((spent_amount / limit_amount) * 100, 100);
+  const isExceeded = spent_amount > limit_amount;
 
   return (
-    <div className="bg-white p-5 rounded-xl shadow space-y-2">
+    <div className="bg-white p-5 rounded-xl shadow space-y-3">
 
-      {/* Header */}
+      {/* HEADER (only once) */}
       <div className="flex justify-between items-center">
         <h3 className="font-bold text-lg">{category}</h3>
 
-        <button
-          onClick={() => onDelete(id)}
-          className="text-red-500 hover:text-red-700 text-sm font-semibold"
-        >
-          Delete
-        </button>
+        <div className="flex gap-3">
+          {/* EDIT */}
+          <button
+            onClick={() => onEdit({ id, category, spent_amount, limit_amount, warning })}
+            className="text-blue-500 hover:text-blue-700 text-sm font-semibold"
+          >
+            Edit
+          </button>
+
+          {/* DELETE */}
+          <button
+            onClick={() => onDelete(id)}
+            className="text-red-500 hover:text-red-700 text-sm font-semibold"
+          >
+            Delete
+          </button>
+        </div>
       </div>
 
+      {/* DETAILS */}
       <p className="text-sm text-gray-600">
         Spent: ₹{spent_amount} / ₹{limit_amount}
       </p>
 
-      {/* Progress Bar */}
+      {/* PROGRESS BAR */}
       <div className="w-full bg-gray-200 rounded-full h-3">
         <div
-          className={`h-3 rounded-full ${
-            spent_amount > limit_amount ? "bg-red-500" : "bg-green-500"
-          }`}
+          className={`h-3 rounded-full ${isExceeded ? "bg-red-500" : "bg-green-500"}`}
           style={{ width: `${percent}%` }}
         ></div>
       </div>
 
-      {/* Warning */}
-      <p
-        className={`text-sm font-semibold ${
-          warning?.includes("exceeded") ? "text-red-600" : "text-green-600"
-        }`}
-      >
-        {warning}
-      </p>
+      {/* STATUS / WARNING */}
+      {isExceeded ? (
+        <p className="text-sm font-semibold text-red-600">⚠ Budget limit exceeded</p>
+      ) : (
+        <p className="text-sm font-semibold text-green-600">Within limit</p>
+      )}
     </div>
   );
 }

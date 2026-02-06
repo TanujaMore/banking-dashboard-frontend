@@ -15,12 +15,14 @@ import {
 import API from "../utils/api";
 import BudgetCard from "../components/BudgetCard.jsx";
 import AddBudgetModal from "../components/AddBudgetModal.jsx";
+import { formatINR } from "../utils/format"; // ✅ ADDED
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 const Budgets = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [budgets, setBudgets] = useState([]);
+  const [editBudget, setEditBudget] = useState(null);
 
   /* 🔹 LOAD REAL BUDGET PROGRESS FROM BACKEND */
   useEffect(() => {
@@ -36,14 +38,28 @@ const Budgets = () => {
     }
   };
 
-  /* 🔹 ADD NEW BUDGET (BACKEND CONNECTED) */
+  /* 🔹 ADD NEW BUDGET */
   const handleAddBudget = async (newBudget) => {
     try {
       await API.post("/budgets", newBudget);
-      loadBudgets(); // reload after add
+      loadBudgets();
       setIsModalOpen(false);
     } catch (error) {
       alert("Failed to add budget ❌");
+      console.log(error);
+    }
+  };
+
+  /* 🔹 UPDATE BUDGET */
+  const handleUpdateBudget = async (id, updatedData) => {
+    try {
+      await API.put(`/budgets/${id}`, updatedData);
+      loadBudgets();
+      setEditBudget(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      alert("Failed to update budget ❌");
+      console.log(error);
     }
   };
 
@@ -53,8 +69,6 @@ const Budgets = () => {
 
     try {
       await API.delete(`/budgets/${id}`);
-
-      // remove from UI without reload
       setBudgets((prev) => prev.filter((b) => b.id !== id));
     } catch (error) {
       alert("Failed to delete budget ❌");
@@ -62,7 +76,7 @@ const Budgets = () => {
     }
   };
 
-  /* 🔹 PIE DATA (Categorized Spend) */
+  /* 🔹 PIE DATA */
   const pieData = budgets.map((b) => ({
     name: b.category,
     value: b.spent_amount,
@@ -70,7 +84,6 @@ const Budgets = () => {
 
   return (
     <div className="p-8 space-y-8">
-
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
@@ -114,7 +127,9 @@ const Budgets = () => {
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) => formatINR(value)} // ✅ formatted tooltip
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -129,7 +144,9 @@ const Budgets = () => {
             <BarChart data={budgets}>
               <XAxis dataKey="category" />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                formatter={(value) => formatINR(value)} // ✅ formatted tooltip
+              />
               <Legend />
               <Bar dataKey="limit_amount" fill="#e2e8f0" name="Limit" />
               <Bar dataKey="spent_amount" fill="#3b82f6" name="Spent" />
@@ -145,19 +162,28 @@ const Budgets = () => {
             key={budget.id}
             id={budget.id}
             category={budget.category}
-            spent_amount={budget.spent_amount}
-            limit_amount={budget.limit_amount}
+            spent_amount={formatINR(budget.spent_amount)} // ✅ formatted
+            limit_amount={formatINR(budget.limit_amount)} // ✅ formatted
             warning={budget.warning}
-            onDelete={handleDeleteBudget}   // 🔥 delete connected here
+            onDelete={handleDeleteBudget}
+            onEdit={(b) => {
+              setEditBudget(b);
+              setIsModalOpen(true);
+            }}
           />
         ))}
       </div>
 
-      {/* -------- ADD MODAL -------- */}
+      {/* -------- ADD / EDIT MODAL -------- */}
       <AddBudgetModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditBudget(null);
+        }}
         onAdd={handleAddBudget}
+        onUpdate={handleUpdateBudget}
+        initialData={editBudget}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../utils/api";
+import { formatINR } from "../utils/format";
 
 /* ------------------ CURRENCIES ------------------ */
 const CURRENCIES = {
@@ -17,14 +18,13 @@ export default function Transactions() {
   const [categories, setCategories] = useState([]);
   const [currency, setCurrency] = useState("INR");
 
-  // 🔹 ADD TRANSACTION STATES
+  /* ------------------ ADD TRANSACTION STATES ------------------ */
   const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("credit");
   const [txnDate, setTxnDate] = useState("");
   const [merchant, setMerchant] = useState("");
-
 
   /* ------------------ FETCH ACCOUNTS ------------------ */
   useEffect(() => {
@@ -53,10 +53,6 @@ export default function Transactions() {
       .then((res) => setCategories(res.data))
       .catch(() => alert("Failed to load categories"));
   }, []);
-
-  /* ------------------ HELPERS ------------------ */
-  const convert = (amount) =>
-    (Number(amount || 0) * CURRENCIES[currency].rate).toFixed(2);
 
   /* ------------------ CSV IMPORT ------------------ */
   const handleCSV = (e) => {
@@ -88,12 +84,11 @@ export default function Transactions() {
     API.post("/transactions/", {
       account_id: Number(selectedAccount),
       description: desc,
-      merchant: merchant,  
+      merchant: merchant,
       amount: Number(amount),
       txn_type: type,
-      currency: currency,   
+      currency: currency,
       txn_date: txnDate,
-
     })
       .then(() => {
         alert("Transaction added successfully ✅");
@@ -105,7 +100,6 @@ export default function Transactions() {
         setTxnDate("");
         setMerchant("");
 
-
         API.get(`/transactions/${selectedAccount}`).then((res) =>
           setTransactions(res.data)
         );
@@ -113,23 +107,19 @@ export default function Transactions() {
       .catch(() => alert("Failed to add transaction ❌"));
   };
 
-  /* ------------------ UPDATE CATEGORY (🔥 FIXED) ------------------ */
+  /* ------------------ UPDATE CATEGORY ------------------ */
   const handleCategoryChange = (txnId, newCategory) => {
     API.put(`/transactions/${txnId}/category`, null, {
-      params: { category: newCategory },   // 🔥 VERY IMPORTANT
+      params: { category: newCategory },
     })
       .then(() => {
-        // Update UI without reloading
         setTransactions((prev) =>
           prev.map((tx) =>
             tx.id === txnId ? { ...tx, category: newCategory } : tx
           )
         );
       })
-      .catch((err) => {
-        console.error(err);
-        alert("Failed to update category ❌");
-      });
+      .catch(() => alert("Failed to update category ❌"));
   };
 
   /* ------------------ UI ------------------ */
@@ -197,14 +187,14 @@ export default function Transactions() {
             onChange={(e) => setDesc(e.target.value)}
             className="border rounded px-3 py-2 w-full mb-3"
           />
+
           <input
             type="text"
-            placeholder="Merchant (eg: Zomato, Amazon, Uber)"
+            placeholder="Merchant (eg: Zomato, Amazon)"
             value={merchant}
             onChange={(e) => setMerchant(e.target.value)}
             className="border rounded px-3 py-2 w-full mb-3"
-            />
-
+          />
 
           <input
             type="number"
@@ -220,8 +210,6 @@ export default function Transactions() {
             onChange={(e) => setTxnDate(e.target.value)}
             className="border rounded px-3 py-2 w-full mb-3"
           />
-
-
 
           <select
             value={type}
@@ -239,7 +227,6 @@ export default function Transactions() {
             >
               Save
             </button>
-
             <button
               onClick={() => setShowForm(false)}
               className="bg-gray-400 text-white px-4 py-2 rounded"
@@ -277,16 +264,9 @@ export default function Transactions() {
             {transactions.map((tx) => (
               <tr key={tx.id} className="border-t hover:bg-gray-50">
                 <td className="px-6 py-4">{tx.id}</td>
+                <td className="px-6 py-4 font-medium">{tx.description || "-"}</td>
+                <td className="px-6 py-4">{tx.merchant || "-"}</td>
 
-                <td className="px-6 py-4 font-medium">
-                  {tx.description || "-"}
-                </td>
-                <td className="px-6 py-4">
-                  {tx.merchant || "-"}
-                </td>
-
-
-                {/* 🔹 CATEGORY DROPDOWN */}
                 <td className="px-6 py-4">
                   <select
                     value={tx.category || "Others"}
@@ -302,15 +282,10 @@ export default function Transactions() {
                     ))}
                   </select>
                 </td>
-                <td className="px-6 py-4">
-                   {tx.currency || "INR"}
-                </td>
 
+                <td className="px-6 py-4">{tx.currency || "INR"}</td>
 
-            
-
-
-
+                {/* ✅ FIXED AMOUNT WITH COMMAS */}
                 <td
                   className={`px-6 py-4 text-right font-semibold ${
                     tx.txn_type === "credit"
@@ -318,11 +293,8 @@ export default function Transactions() {
                       : "text-red-600"
                   }`}
                 >
-                  
                   {tx.txn_type === "credit" ? "+" : "-"}
-                  {CURRENCIES[tx.currency || "INR"]?.symbol || "₹"}
-                  {Number(tx.amount).toFixed(2)}
-
+                  {formatINR(Math.abs(Number(tx.amount)))}
                 </td>
 
                 <td className="px-6 py-4 text-center">

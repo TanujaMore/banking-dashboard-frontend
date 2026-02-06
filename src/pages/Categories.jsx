@@ -1,17 +1,11 @@
-import { useEffect, useState } from "react"
-import API from "../utils/api"; // your axios file
+import { useEffect, useState } from "react";
+import API from "../utils/api";
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryName, setCategoryName] = useState("");
 
-  const [formData, setFormData] = useState({
-    name: "",
-    keywords: "",
-  });
-
-  // 🔹 LOAD CATEGORIES FROM BACKEND
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -21,57 +15,28 @@ export default function Categories() {
       const res = await API.get("/categories/");
       setCategories(res.data);
     } catch (err) {
-      alert("Backend not running or error fetching categories ❌");
+      alert("Failed to load categories ❌");
     }
   };
 
-  // 🔹 OPEN CREATE MODAL
-  const openCreate = () => {
-    setEditingCategory(null);
-    setFormData({ name: "", keywords: "" });
-    setOpenModal(true);
-  };
+  const handleCreate = async () => {
+    if (!categoryName.trim()) {
+      alert("Please enter a category name");
+      return;
+    }
 
-  // 🔹 OPEN EDIT MODAL
-  const openEdit = (cat) => {
-    setEditingCategory(cat);
-    setFormData({
-      name: cat.name,
-      keywords: cat.keywords || "",
-    });
-    setOpenModal(true);
-  };
-
-  // 🔹 SAVE CATEGORY (CREATE OR UPDATE)
-  const handleSave = async () => {
     try {
-      if (editingCategory) {
-        // UPDATE
-        await API.put(`/categories/${editingCategory.id}`, formData);
-        alert("Category updated successfully ✅");
-      } else {
-        // CREATE
-        await API.post("/categories/", formData);
-        alert("Category created successfully ✅");
-      }
+      await API.post("/categories/", {
+        name: categoryName,
+        keywords: "" // handled internally by system
+      });
 
+      alert("Category created successfully ✅");
+      setCategoryName("");
       setOpenModal(false);
       fetchCategories();
     } catch (err) {
-      alert("Error saving category ❌");
-    }
-  };
-
-  // 🔹 DELETE CATEGORY
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-
-    try {
-      await API.delete(`/categories/${id}`);
-      alert("Category deleted ✅");
-      fetchCategories();
-    } catch (err) {
-      alert("Error deleting category ❌");
+      alert("Error creating category ❌");
     }
   };
 
@@ -83,12 +48,12 @@ export default function Categories() {
         <div>
           <h1 className="text-3xl font-bold">Categories</h1>
           <p className="text-gray-500">
-            Manage categories and automatic categorization rules
+            Organize your transactions using categories
           </p>
         </div>
 
         <button
-          onClick={openCreate}
+          onClick={() => setOpenModal(true)}
           className="bg-cyan-500 text-white px-5 py-2 rounded-lg font-medium"
         >
           + Create Category
@@ -100,9 +65,7 @@ export default function Categories() {
         <table className="w-full">
           <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="p-3">Category</th>
-              <th className="p-3">Keywords (Rules)</th>
-              <th className="p-3">Actions</th>
+              <th className="p-3">Category Name</th>
             </tr>
           </thead>
 
@@ -110,31 +73,13 @@ export default function Categories() {
             {categories.map((cat) => (
               <tr key={cat.id} className="border-t">
                 <td className="p-3 font-medium">{cat.name}</td>
-                <td className="p-3 text-sm text-gray-600">
-                  {cat.keywords || "-"}
-                </td>
-                <td className="p-3 flex gap-3">
-                  <button
-                    onClick={() => openEdit(cat)}
-                    className="text-blue-600"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(cat.id)}
-                    className="text-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
               </tr>
             ))}
 
             {categories.length === 0 && (
               <tr>
-                <td colSpan="3" className="p-5 text-center text-gray-400">
-                  No categories found
+                <td className="p-5 text-center text-gray-400">
+                  No categories added yet
                 </td>
               </tr>
             )}
@@ -142,42 +87,32 @@ export default function Categories() {
         </table>
       </div>
 
-      {/* CREATE / EDIT MODAL */}
+      {/* CREATE CATEGORY MODAL */}
       {openModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-[400px] rounded-xl p-6 space-y-4">
+          <div className="bg-white w-[420px] rounded-xl p-6 space-y-5">
 
-            <h2 className="text-lg font-semibold">
-              {editingCategory ? "Edit Category" : "Create Category"}
-            </h2>
+            <h2 className="text-xl font-semibold">Create Category</h2>
 
-            <div>
-              <label className="block mb-1 text-sm">Category Name</label>
-              <input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2"
-                placeholder="e.g. Food"
-              />
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+              Categories help you group your transactions (for example: Food,
+              Travel, Education). You can select them while adding or editing
+              transactions.
             </div>
 
             <div>
-              <label className="block mb-1 text-sm">
-                Keywords (comma separated)
+              <label className="block mb-1 text-sm font-medium">
+                Category Name
               </label>
               <input
-                value={formData.keywords}
-                onChange={(e) =>
-                  setFormData({ ...formData, keywords: e.target.value })
-                }
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
                 className="w-full border rounded px-3 py-2"
-                placeholder="zomato, swiggy, restaurant"
+                placeholder="e.g. Medical, Entertainment"
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-3">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setOpenModal(false)}
                 className="text-gray-500"
@@ -186,10 +121,10 @@ export default function Categories() {
               </button>
 
               <button
-                onClick={handleSave}
+                onClick={handleCreate}
                 className="bg-cyan-500 text-white px-4 py-2 rounded-lg"
               >
-                Save
+                Save Category
               </button>
             </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../utils/api";
+import { formatINR } from "../utils/format"; // ✅ ADDED
 
 /* ------------------ MAIN COMPONENT ------------------ */
 
@@ -40,21 +41,20 @@ export default function Accounts() {
   /* ---------------- DELETE ACCOUNT ---------------- */
 
   const deleteAccount = async (id) => {
-  try {
-    await API.delete(`/accounts/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      await API.delete(`/accounts/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    alert("Account deleted successfully");
-    fetchAccounts();
-  } catch (err) {
-    console.error("Delete error:", err.response?.data || err.message);
-    alert("Failed to delete account");
-  }
-};
-  
+      alert("Account deleted successfully");
+      fetchAccounts();
+    } catch (err) {
+      console.error("Delete error:", err.response?.data || err.message);
+      alert("Failed to delete account");
+    }
+  };
 
   /* ---------------- UI ---------------- */
 
@@ -78,10 +78,14 @@ export default function Accounts() {
       {/* SUMMARY */}
       <div className="bg-white rounded-xl shadow p-6 grid md:grid-cols-3 gap-6">
         <Summary label="Total Accounts" value={accounts.length} />
+
         <Summary
           label="Total Balance"
-          value={`₹ ${accounts.reduce((sum, a) => sum + a.balance, 0)}`}
+          value={formatINR(
+            accounts.reduce((sum, a) => sum + Number(a.balance || 0), 0)
+          )}
         />
+
         <Summary
           label="Positive Accounts"
           value={accounts.filter((a) => a.balance > 0).length}
@@ -91,11 +95,7 @@ export default function Accounts() {
       {/* ACCOUNTS GRID */}
       <div className="grid md:grid-cols-3 gap-6">
         {accounts.map((acc) => (
-          <AccountCard
-            key={acc.id}
-            acc={acc}
-            onDelete={deleteAccount}
-          />
+          <AccountCard key={acc.id} acc={acc} onDelete={deleteAccount} />
         ))}
       </div>
 
@@ -125,12 +125,14 @@ function AccountCard({ acc, onDelete }) {
     <div className="bg-white rounded-xl shadow p-6 space-y-3">
       <h3 className="text-xl font-semibold">{acc.bank_name}</h3>
 
-      <p className="text-gray-500">
-        {acc.account_type}
-      </p>
+      <p className="text-gray-500">{acc.account_type}</p>
 
-      <p className="text-2xl font-bold text-green-600">
-        ₹ {acc.balance}
+      <p
+        className={`text-2xl font-bold ${
+          acc.balance >= 0 ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {formatINR(acc.balance)}
       </p>
 
       <button
